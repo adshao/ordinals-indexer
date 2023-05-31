@@ -1,0 +1,65 @@
+syntax = "proto3";
+package kratos.api;
+
+option go_package = "github.com/adshao/ordinals-indexer/internal/conf;conf";
+
+import "google/protobuf/duration.proto";
+
+message Bootstrap {
+  Server server = 1;
+  Data data = 2;
+  Ord ord = 3;
+}
+
+message Server {
+  message HTTP {
+    string network = 1;
+    string addr = 2;
+    google.protobuf.Duration timeout = 3;
+  }
+  message GRPC {
+    string network = 1;
+    string addr = 2;
+    google.protobuf.Duration timeout = 3;
+  }
+  HTTP http = 1;
+  GRPC grpc = 2;
+}
+
+message Data {
+  message Database {
+    string driver = 1;
+    string source = 2;
+  }
+  message Redis {
+    string network = 1;
+        string addr = 2;
+        string password = 3;
+        int32 db = 4;
+        google.protobuf.Duration dial_timeout = 5;
+        google.protobuf.Duration read_timeout = 6;
+        google.protobuf.Duration write_timeout = 7;
+  }  
+  Database database = 1;
+  Redis redis = 2;
+}
+
+message Ord {
+  message Server {
+    string addr = 1;
+    int64 inscription_id_start = 2;
+    int64 inscription_id_end = 3;
+  }
+  message Worker {
+    int32 concurrency = 1;
+  }
+  message Notification {
+    message Webhook {
+      repeated string urls = 1;
+    }
+    Webhook webhook = 1;
+  }
+  Server server = 1;
+  Worker worker = 2;
+  Notification notification = 3;
+}

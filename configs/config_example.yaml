@@ -1,0 +1,25 @@
+server:
+  http:
+    addr: 0.0.0.0:8000
+    timeout: 1s
+  grpc:
+    addr: 0.0.0.0:9000
+    timeout: 1s
+data:
+  database:
+    driver: postgres
+    source: postgres://test:test@127.0.0.1:5432/test?sslmode=disable
+  redis:
+    addr: 127.0.0.1:6379
+    read_timeout: 0.2s
+    write_timeout: 0.2s
+ord:
+  server:
+    addr: http://127.0.0.1:80
+    inscription_id_start: 0
+    inscription_id_end:
+  worker:
+    concurrency: 10
+  notification:
+    webhook:
+      urls:

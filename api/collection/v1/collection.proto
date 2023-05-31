@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package api.collection.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/adshao/ordinals-indexer/api/collection/v1;v1";
+option java_multiple_files = true;
+option java_package = "api.collection.v1";
+
+service Collection {
+	rpc GetCollection (GetCollectionRequest) returns (GetCollectionReply) {
+		option (google.api.http) = {
+			get: "/v1/collections/{tick}"
+		};
+	}
+	rpc ListCollections (ListCollectionRequest) returns (ListCollectionReply) {
+		option (google.api.http) = {
+			get: "/v1/collections"
+		};
+	}
+}
+
+message GetCollectionRequest {
+	string tick = 1;
+	string p = 2;
+}
+message GetCollectionReply {
+	CollectionMessage data = 1;
+}
+
+message CollectionMessage {
+	string tick = 1;
+	string p = 2;
+	uint64 max = 3;
+	uint64 supply = 4;
+	string base_uri = 5;
+	string name = 6;
+	string description = 7;
+	string image = 8;
+	repeated google.protobuf.Struct attributes = 9;
+	string tx_hash = 10;
+	uint64 block_height = 11;
+	google.protobuf.Timestamp block_time = 12;
+	string address = 13;
+	int64 inscription_id = 14;
+	string inscription_uid = 15;
+}
+
+message ListCollectionRequest {
+	string tick = 1;
+	string p = 2;
+	string order_by = 3;
+	uint64 limit = 4;
+	uint64 offset = 5;
+}
+message ListCollectionReply {
+	repeated CollectionMessage data = 1;
+	Paging paging = 2;
+}
+
+message Paging {
+	uint64 total_count = 1;
+	uint64 count = 2;
+}
+  

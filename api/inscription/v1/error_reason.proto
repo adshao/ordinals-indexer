@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package inscription.v1;
+import "errors/errors.proto";
+
+option go_package = "github.com/adshao/ordinals-indexer/api/inscription/v1;v1";
+option java_multiple_files = true;
+option java_package = "inscription.v1";
+option objc_class_prefix = "APIInscriptionV1";
+
+enum ErrorReason {
+
+  option (errors.default_code) = 500;
+
+  INSCRIPTION_UNSPECIFIED = 0;
+  INSCRIPTION_NOT_FOUND = 1 [(errors.code) = 404];
+  INVALID_PARAMETERS = 2 [(errors.code) = 404];
+}

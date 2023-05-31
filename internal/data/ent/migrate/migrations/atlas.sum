@@ -1,0 +1,6 @@
+h1:v/qzHioWJbTGhJG7HHkeOkLHJn6GCmuQgYSRDyCj2Kc=
+20230528025749_init_db.sql h1:Ec2vtgyDqZSUQ7OCK1fhdUrFK5ifmV984FAsy8ptm74=
+20230528035424_add_inscription.sql h1:V5prIh1+4mZX0jzU9q45CSopz+rw9Gr4zNmZIYC1vOk=
+20230530155039_token_inscription_unique.sql h1:4nKF7SjThzcIeHxzI07a3WW9KQlOdXA9C0U8LRG+l0o=
+20230530161045_add_inscription_uid.sql h1:Cje7ji1d37oVefSmaGfGDf8PvhEO87kBGhG991+EYDU=
+20230530161658_remove_token_tick_unique.sql h1:HBvKTpnjPAf0nw3akzuuYnGYgi9VP30sRTyFJ1F3S+M=

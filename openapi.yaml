@@ -1,0 +1,355 @@
+# Generated with protoc-gen-openapi
+# https://github.com/google/gnostic/tree/master/cmd/protoc-gen-openapi
+
+openapi: 3.0.3
+info:
+    title: ""
+    version: 0.0.1
+paths:
+    /v1/collections:
+        get:
+            tags:
+                - Collection
+            operationId: Collection_ListCollections
+            parameters:
+                - name: tick
+                  in: query
+                  schema:
+                    type: string
+                - name: p
+                  in: query
+                  schema:
+                    type: string
+                - name: orderBy
+                  in: query
+                  schema:
+                    type: string
+                - name: limit
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint64
+                - name: offset
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint64
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.collection.v1.ListCollectionReply'
+    /v1/collections/{tick}:
+        get:
+            tags:
+                - Collection
+            operationId: Collection_GetCollection
+            parameters:
+                - name: tick
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                - name: p
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.collection.v1.GetCollectionReply'
+    /v1/inscriptions:
+        get:
+            tags:
+                - Inscription
+            operationId: Inscription_ListInscription
+            parameters:
+                - name: orderBy
+                  in: query
+                  schema:
+                    type: string
+                - name: limit
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint64
+                - name: offset
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint64
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.inscription.v1.ListInscriptionReply'
+    /v1/inscriptions/{inscriptionId}:
+        get:
+            tags:
+                - Inscription
+            operationId: Inscription_GetInscription
+            parameters:
+                - name: inscriptionId
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    format: int64
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.inscription.v1.GetInscriptionReply'
+    /v1/tokens:
+        get:
+            tags:
+                - Token
+            operationId: Token_ListTokens
+            parameters:
+                - name: p
+                  in: query
+                  schema:
+                    type: string
+                - name: tick
+                  in: query
+                  schema:
+                    type: string
+                - name: orderBy
+                  in: query
+                  schema:
+                    type: string
+                - name: limit
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint64
+                - name: offset
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint64
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/token.v1.ListTokenReply'
+    /v1/tokens/{tick}/{tokenId}:
+        get:
+            tags:
+                - Token
+            operationId: Token_GetToken
+            parameters:
+                - name: tick
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                - name: tokenId
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    format: uint64
+                - name: p
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/token.v1.TokenReply'
+components:
+    schemas:
+        api.collection.v1.CollectionMessage:
+            type: object
+            properties:
+                tick:
+                    type: string
+                p:
+                    type: string
+                max:
+                    type: integer
+                    format: uint64
+                supply:
+                    type: integer
+                    format: uint64
+                baseUri:
+                    type: string
+                name:
+                    type: string
+                description:
+                    type: string
+                image:
+                    type: string
+                attributes:
+                    type: array
+                    items:
+                        type: object
+                txHash:
+                    type: string
+                blockHeight:
+                    type: integer
+                    format: uint64
+                blockTime:
+                    type: string
+                    format: date-time
+                address:
+                    type: string
+                inscriptionId:
+                    type: integer
+                    format: int64
+                inscriptionUid:
+                    type: string
+        api.collection.v1.GetCollectionReply:
+            type: object
+            properties:
+                data:
+                    $ref: '#/components/schemas/api.collection.v1.CollectionMessage'
+        api.collection.v1.ListCollectionReply:
+            type: object
+            properties:
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/api.collection.v1.CollectionMessage'
+                paging:
+                    $ref: '#/components/schemas/api.collection.v1.Paging'
+        api.collection.v1.Paging:
+            type: object
+            properties:
+                totalCount:
+                    type: integer
+                    format: uint64
+                count:
+                    type: integer
+                    format: uint64
+        api.inscription.v1.GetInscriptionReply:
+            type: object
+            properties:
+                data:
+                    $ref: '#/components/schemas/api.inscription.v1.InscriptionMessage'
+        api.inscription.v1.InscriptionMessage:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    format: int64
+                inscriptionId:
+                    type: integer
+                    format: int64
+                uid:
+                    type: string
+                address:
+                    type: string
+                outputValue:
+                    type: integer
+                    format: uint64
+                contentLength:
+                    type: integer
+                    format: uint64
+                contentType:
+                    type: string
+                timestamp:
+                    type: string
+                    format: date-time
+                genesisHeight:
+                    type: integer
+                    format: uint64
+                genesisFee:
+                    type: integer
+                    format: uint64
+                genesisTx:
+                    type: string
+                location:
+                    type: string
+                output:
+                    type: string
+                offset:
+                    type: integer
+                    format: uint64
+        api.inscription.v1.ListInscriptionReply:
+            type: object
+            properties:
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/api.inscription.v1.InscriptionMessage'
+                paging:
+                    $ref: '#/components/schemas/api.inscription.v1.Paging'
+        api.inscription.v1.Paging:
+            type: object
+            properties:
+                totalCount:
+                    type: integer
+                    format: uint64
+                count:
+                    type: integer
+                    format: uint64
+        token.v1.ListTokenReply:
+            type: object
+            properties:
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/token.v1.TokenMessage'
+                paging:
+                    $ref: '#/components/schemas/token.v1.Paging'
+        token.v1.Paging:
+            type: object
+            properties:
+                totalCount:
+                    type: integer
+                    format: uint64
+                count:
+                    type: integer
+                    format: uint64
+        token.v1.TokenMessage:
+            type: object
+            properties:
+                p:
+                    type: string
+                tick:
+                    type: string
+                tokenId:
+                    type: integer
+                    format: uint64
+                txHash:
+                    type: string
+                blockHeight:
+                    type: integer
+                    format: uint64
+                blockTime:
+                    type: string
+                    format: date-time
+                address:
+                    type: string
+                inscriptionId:
+                    type: integer
+                    format: int64
+                inscriptionUid:
+                    type: string
+            description: The response message containing the token
+        token.v1.TokenReply:
+            type: object
+            properties:
+                data:
+                    $ref: '#/components/schemas/token.v1.TokenMessage'
+tags:
+    - name: Collection
+    - name: Inscription
+    - name: Token
+      description: The token service definition.

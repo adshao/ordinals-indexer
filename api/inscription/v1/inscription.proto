@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package api.inscription.v1;
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/adshao/ordinals-indexer/api/inscription/v1;v1";
+option java_multiple_files = true;
+option java_package = "api.inscription.v1";
+
+service Inscription {
+	rpc GetInscription (GetInscriptionRequest) returns (GetInscriptionReply) {
+		option (google.api.http) = {
+			get: "/v1/inscriptions/{inscription_id}"
+		};
+	};
+	rpc ListInscription (ListInscriptionRequest) returns (ListInscriptionReply) {
+		option (google.api.http) = {
+			get: "/v1/inscriptions"
+		};
+	};
+}
+
+message GetInscriptionRequest {
+	int64 inscription_id = 1;
+}
+
+message InscriptionMessage {
+	int64 id = 1;
+	int64 inscription_id = 2;
+	string uid = 3;
+	string address = 4;
+	uint64 output_value = 5;
+	uint64 content_length = 6;
+	string content_type = 7;
+	google.protobuf.Timestamp timestamp = 8;
+	uint64 genesis_height = 9;
+	uint64 genesis_fee = 10;
+	string genesis_tx = 11;
+	string location = 12;
+	string output = 13;
+	uint64 offset = 14;
+}
+
+message GetInscriptionReply {
+	InscriptionMessage data = 1;
+}
+
+message ListInscriptionRequest {
+	string order_by = 1;
+  	uint64 limit = 2;
+  	uint64 offset = 3;
+}
+
+message ListInscriptionReply {
+	repeated InscriptionMessage data = 1;
+	Paging paging = 2;
+}
+
+message Paging {
+	uint64 total_count = 1;
+	uint64 count = 2;
+}

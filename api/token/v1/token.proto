@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package token.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/adshao/ordinals-indexer/api/token/v1;v1";
+option java_multiple_files = true;
+option java_package = "dev.kratos.api.token.v1";
+option java_outer_classname = "TokenProtoV1";
+
+// The token service definition.
+service Token {
+  rpc GetToken (GetTokenRequest) returns (TokenReply) {
+    option (google.api.http) = {
+      get: "/v1/tokens/{tick}/{token_id}"
+    };
+  }
+
+  rpc ListTokens (ListTokenRequest) returns (ListTokenReply) {
+    option (google.api.http) = {
+      get: "/v1/tokens"
+    };
+  }
+}
+
+// The request message containing the user's name.
+message GetTokenRequest {
+  string tick = 1;
+  uint64 token_id = 2;
+  string p = 3;
+}
+
+message TokenReply {
+  TokenMessage data = 1;
+}
+
+// The response message containing the token
+message TokenMessage {
+  string p = 1;
+  string tick = 2;
+  uint64 token_id = 3;
+  string tx_hash = 4;
+  uint64 block_height = 5;
+  google.protobuf.Timestamp block_time = 6;
+  string address = 7;
+  int64 inscription_id = 8;
+  string inscription_uid = 9;
+}
+
+message ListTokenRequest {
+  string p = 1;
+  string tick = 2;
+  string order_by = 3;
+  uint64 limit = 4;
+  uint64 offset = 5;
+}
+
+message ListTokenReply {
+  repeated TokenMessage data = 1;
+  Paging paging = 2;
+}
+
+message Paging {
+  uint64 total_count = 1;
+  uint64 count = 2;
+}
