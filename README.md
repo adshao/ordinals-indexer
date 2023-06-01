@@ -56,7 +56,7 @@ Run syncer to start syncing data with the ordinals server:
 
 ## Documentation
 
-You can find the complete API documentation here.
+You can find the complete API documentation [here](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/adshao/ordinals-indexer/main/openapi.yaml#/).
 
 ## Contributing
 
