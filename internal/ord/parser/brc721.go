@@ -13,7 +13,7 @@ const (
 )
 
 const (
-	OpBRC721 = "brc-721"
+	BRC721 = "brc-721"
 )
 
 var (
@@ -43,7 +43,7 @@ type BRC721Deploy struct {
 }
 
 func (m BRC721Deploy) Validate() bool {
-	if m.P != OpBRC721 {
+	if m.P != BRC721 {
 		return false
 	}
 	if m.Op != "deploy" {
@@ -84,7 +84,7 @@ type BRC721Mint struct {
 }
 
 func (m BRC721Mint) Validate() bool {
-	if m.P != OpBRC721 {
+	if m.P != BRC721 {
 		return false
 	}
 	if m.Op != "mint" {
@@ -113,14 +113,15 @@ func (p *BRC721MintParser) Parse(data []byte) (interface{}, bool, error) {
 }
 
 type BRC721Update struct {
-	P       string  `json:"p"`
-	Op      string  `json:"op"`
-	Tick    string  `json:"tick"`
-	BaseURI *string `json:"buri"`
+	P       string      `json:"p"`
+	Op      string      `json:"op"`
+	Tick    string      `json:"tick"`
+	BaseURI *string     `json:"buri"`
+	Meta    *BRC721Meta `json:"meta"`
 }
 
 func (m BRC721Update) Validate() bool {
-	if m.P != OpBRC721 {
+	if m.P != BRC721 {
 		return false
 	}
 	if m.Op != "update" {
@@ -129,7 +130,7 @@ func (m BRC721Update) Validate() bool {
 	if m.Tick == "" {
 		return false
 	}
-	if m.BaseURI == nil {
+	if m.BaseURI == nil && m.Meta == nil {
 		return false
 	}
 	return true
