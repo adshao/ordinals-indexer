@@ -81,12 +81,20 @@ generate:
 	go get github.com/google/wire/cmd/wire@latest
 	go generate ./...
 
+.PHONY: db
+db:
+	go run -mod=mod entgo.io/ent/cmd/ent generate --feature sql/upsert --target ./internal/data/ent ./internal/data/ent/schema
+
 .PHONY: all
 # generate all
 all:
 	make api;
+	make errors;
 	make config;
+	make db;
 	make generate;
+	make check;
+	make test;
 
 .PHONY: test unit-test check fmt vet
 test: unit-test

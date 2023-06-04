@@ -38,3 +38,8 @@ bin/
 *.swp
 
 config.yaml
+
+*.pb.go
+internal/data/ent/
+!internal/data/ent/schema/
+!internal/data/ent/migrate/migrations/
