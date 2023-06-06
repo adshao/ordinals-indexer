@@ -132,6 +132,7 @@ func (s *Syncer) receveResult() {
 	results := make(map[string]*result)
 	resultCount := 0
 	var lastInscriptionId int64
+	var stopped bool
 	for {
 		select {
 		case lastInscriptionId = <-s.lastInscriptionIdChan:
@@ -143,10 +144,13 @@ func (s *Syncer) receveResult() {
 		case insUids = <-s.processChan:
 			s.logger.Debugf("receiving %d inscriptions", len(insUids))
 		case <-s.stopC:
-			s.logger.Infof("stopping result processor")
-			return
+			stopped = true
 		default:
 			if resultCount == len(insUids) && len(insUids) > 0 {
+				if stopped {
+					s.logger.Infof("result processor stopped")
+					return
+				}
 				var err error
 				processedResultCount := 0
 				resultCount = 0

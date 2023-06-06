@@ -34,16 +34,18 @@ func (parser *pageParser) parsePageRaw(p Page) (io.Reader, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 	return resp.Body, nil
 }
 
 func (parser *pageParser) Parse(p Page) (interface{}, error) {
-	body, err := parser.parsePageRaw(p)
+	r, err := parser.parsePageRaw(p)
 	if err != nil {
 		return nil, err
 	}
-	return p.Parse(body)
+	if rc, ok := r.(io.ReadCloser); ok {
+		defer rc.Close()
+	}
+	return p.Parse(r)
 }
 
 type Page interface {
