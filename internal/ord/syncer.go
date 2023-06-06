@@ -100,13 +100,19 @@ func (s *Syncer) Run() error {
 
 	go func() {
 		for {
-			lastInscriptionId, _ := s.getLastInscriptionId()
-			s.lastInscriptionIdChan <- lastInscriptionId
-			err := s.parseInscriptions(lastInscriptionId)
-			if err != nil {
-				s.logger.Errorf("failed to parse inscriptions: %v", err)
+			select {
+			case <-s.stopC:
+				s.logger.Infof("stopping inscriptions processor")
+				return
+			default:
+				lastInscriptionId, _ := s.getLastInscriptionId()
+				s.lastInscriptionIdChan <- lastInscriptionId
+				err := s.parseInscriptions(lastInscriptionId)
+				if err != nil {
+					s.logger.Errorf("failed to parse inscriptions: %v", err)
+				}
+				time.Sleep(60 * time.Second)
 			}
-			time.Sleep(60 * time.Second)
 		}
 	}()
 
