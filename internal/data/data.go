@@ -70,7 +70,7 @@ func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 		rdb: rdb,
 	}
 	return d, func() {
-		log.Info("message", "closing the data resources")
+		log.Info("closing the data resources")
 		if err := d.db.Close(); err != nil {
 			log.Error(err)
 		}

@@ -17,9 +17,26 @@ Ordinals Indexer is an API server and index synchronizer for ordinals inscriptio
 
 Here are the steps to setup and run Ordinals Indexer:
 
+### Init
+
+Initialize the project:
+
+```bash
+make init
+```
+
 ### Configuration
 
 Copy the `configs/config_example.yaml` to `configs/config.yaml` and modify the configuration file as needed.
+
+### Database
+
+Use `atlas` to apply the database schema to your database.
+
+```bash
+cd internal/data
+atlas migrate apply --dir 'file://ent/migrate/migrations' --url 'postgres://test:test@localhost:5432/test'
+```
 
 ### Database
 
