@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
@@ -16,9 +15,9 @@ import (
 	"github.com/adshao/ordinals-indexer/internal/biz"
 	"github.com/adshao/ordinals-indexer/internal/conf"
 	"github.com/adshao/ordinals-indexer/internal/data"
+	"github.com/adshao/ordinals-indexer/internal/ord/page"
 	"github.com/adshao/ordinals-indexer/internal/ord/parser"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
 )
@@ -28,10 +27,8 @@ var lastInscriptionIdFile = int64(0)
 var ProviderSet = wire.NewSet(NewSyncer)
 
 type result struct {
-	inscriptionUid string
-	inscriptionId  int64
-	info           map[string]interface{}
-	err            error
+	info *page.Inscription
+	err  error
 }
 
 type uids []string
@@ -41,6 +38,7 @@ type Syncer struct {
 	data                  *data.Data
 	collectionUc          *biz.CollectionUsecase
 	tokenUc               *biz.TokenUsecase
+	pageParser            page.PageParser
 	logger                *log.Helper
 	inscriptionUidChan    chan string
 	resultChan            chan *result
@@ -60,6 +58,7 @@ func NewSyncer(c *conf.Ord, data *data.Data, collectionUc *biz.CollectionUsecase
 		data:         data,
 		collectionUc: collectionUc,
 		tokenUc:      tokenUc,
+		pageParser:   page.NewPageParser(c),
 		logger:       log.NewHelper(logger),
 	}
 	concurrency := c.Worker.Concurrency
@@ -83,6 +82,7 @@ func (s *Syncer) Run() error {
 		workers[i] = &Worker{
 			wid:        i,
 			baseURL:    s.c.Server.Addr,
+			pageParser: page.NewPageParser(s.c),
 			data:       s.data,
 			uidChan:    s.inscriptionUidChan,
 			resultChan: s.resultChan,
@@ -102,9 +102,7 @@ func (s *Syncer) Run() error {
 		for {
 			lastInscriptionId, _ := s.getLastInscriptionId()
 			s.lastInscriptionIdChan <- lastInscriptionId
-			inscriptionURL, _ := url.JoinPath(s.c.Server.Addr, "inscriptions", fmt.Sprintf("%d", lastInscriptionId))
-			s.logger.Infof("start crawling from %s", inscriptionURL)
-			_, err := s.parseInscriptions(inscriptionURL)
+			err := s.parseInscriptions(lastInscriptionId)
 			if err != nil {
 				s.logger.Errorf("failed to parse inscriptions: %v", err)
 			}
@@ -133,8 +131,8 @@ func (s *Syncer) receveResult() {
 		case lastInscriptionId = <-s.lastInscriptionIdChan:
 			s.logger.Debugf("received lastInscriptionId: %d", lastInscriptionId)
 		case result := <-s.resultChan:
-			results[result.inscriptionUid] = result
-			s.logger.Debugf("received result for inscription %d", result.inscriptionId)
+			results[result.info.UID] = result
+			s.logger.Debugf("received result for inscription %d", result.info.ID)
 			resultCount++
 		case insUids = <-s.processChan:
 			s.logger.Debugf("receiving %d inscriptions", len(insUids))
@@ -157,11 +155,11 @@ func (s *Syncer) receveResult() {
 					// make sure to process results in ascending order of inscriptionId
 					lastId := int64(0)
 					for _, result := range resultsInOrder {
-						if result.inscriptionId < lastId {
-							err = fmt.Errorf("results are not in order, lastId: %d, currentId: %d", lastId, result.inscriptionId)
+						if result.info.ID < lastId {
+							err = fmt.Errorf("results are not in order, lastId: %d, currentId: %d", lastId, result.info.ID)
 							break
 						}
-						lastId = result.inscriptionId
+						lastId = result.info.ID
 					}
 					if err == nil {
 						processedResultCount, err = s.processResults(resultsInOrder, lastInscriptionId)
@@ -191,8 +189,8 @@ func (s *Syncer) processResults(resultsInOrder []*result, lastInscriptionId int6
 	count := 0
 	var lastSuccessInscriptionId int64
 	for _, result := range resultsInOrder {
-		if result.inscriptionId < lastInscriptionId {
-			s.logger.Debugf("inscription %d is less than lastInscriptionId %d, ignore", result.inscriptionId, lastInscriptionId)
+		if result.info.ID < lastInscriptionId {
+			s.logger.Debugf("inscription %d is less than lastInscriptionId %d, ignore", result.info.ID, lastInscriptionId)
 			continue
 		}
 		if result.err != nil {
@@ -202,8 +200,8 @@ func (s *Syncer) processResults(resultsInOrder []*result, lastInscriptionId int6
 		if err != nil {
 			return count, err
 		}
-		s.logger.Infof("processed inscription %d", result.inscriptionId)
-		lastSuccessInscriptionId = result.inscriptionId
+		s.logger.Infof("processed inscription %d", result.info.ID)
+		lastSuccessInscriptionId = result.info.ID
 		count++
 	}
 	if lastSuccessInscriptionId > 0 && lastSuccessInscriptionId > lastInscriptionId {
@@ -213,16 +211,18 @@ func (s *Syncer) processResults(resultsInOrder []*result, lastInscriptionId int6
 }
 
 func (s *Syncer) processResult(result *result) error {
-	inscriptionId := result.inscriptionId
 	info := result.info
-	switch info["content_parser"].(string) {
+	if info.Content == nil {
+		return fmt.Errorf("content of inscription %d is nil", info.ID)
+	}
+	switch info.Content.Type {
 	case parser.NameBRC721Deploy:
-		err := s.processBRC721Deploy(inscriptionId, info)
+		err := s.processBRC721Deploy(info)
 		if err != nil {
 			return err
 		}
 	case parser.NameBRC721Mint:
-		err := s.processBRC721Mint(inscriptionId, info)
+		err := s.processBRC721Mint(info)
 		if err != nil {
 			return err
 		}
@@ -237,18 +237,18 @@ func (s *Syncer) processResult(result *result) error {
 	return nil
 }
 
-func (s *Syncer) processBRC721Deploy(inscriptionId int64, info map[string]interface{}) error {
-	o := info["content"].(*parser.BRC721Deploy)
+func (s *Syncer) processBRC721Deploy(info *page.Inscription) error {
+	o := info.Content.Data.(*parser.BRC721Deploy)
 	// check if the collection already exists
 	collection, err := s.collectionUc.GetCollectionByTick(context.Background(), biz.ProtocolTypeBRC721, o.Tick)
 	if err != nil {
 		return err
 	}
 	if collection != nil {
-		if collection.InscriptionID > inscriptionId {
-			s.logger.Warnf("collection %s already exists, but inscriptionId %d is less than %d, ignore inscription %d", o.Tick, collection.InscriptionID, inscriptionId, inscriptionId)
+		if collection.InscriptionID > info.ID {
+			s.logger.Warnf("collection %s already exists, but inscriptionId %d is less than %d, ignore inscription %d", o.Tick, collection.InscriptionID, info.ID, info.ID)
 		} else {
-			s.logger.Infof("collection %s already exists, ignore inscription %d", o.Tick, inscriptionId)
+			s.logger.Infof("collection %s already exists, ignore inscription %d", o.Tick, info.ID)
 		}
 		return nil
 	}
@@ -272,22 +272,23 @@ func (s *Syncer) processBRC721Deploy(inscriptionId int64, info map[string]interf
 		collection.Image = o.Meta.Image
 		collection.Attributes = o.Meta.Attributes
 	}
-	collection.TxHash = info["genesis_transaction"].(string)
-	collection.BlockHeight = info["genesis_height"].(uint64)
-	collection.BlockTime = info["timestamp"].(time.Time)
-	collection.Address = info["address"].(string)
-	collection.InscriptionID = inscriptionId
-	collection.InscriptionUID = info["uid"].(string)
+	collection.TxHash = info.GenesisTx
+	collection.BlockHeight = info.GenesisHeight
+	collection.BlockTime = info.Timestamp
+	collection.Address = info.Address
+	collection.InscriptionID = info.ID
+	collection.InscriptionUID = info.UID
 	collection, err = s.collectionUc.CreateCollection(context.Background(), collection)
 	if err != nil {
 		return err
 	}
-	s.logger.Infof("created collection %s for inscription %d", o.Tick, inscriptionId)
+	s.logger.Infof("created collection %s for inscription %d", o.Tick, info.ID)
 	return nil
 }
 
-func (s *Syncer) processBRC721Mint(inscriptionId int64, info map[string]interface{}) error {
-	o := info["content"].(*parser.BRC721Mint)
+func (s *Syncer) processBRC721Mint(info *page.Inscription) error {
+	inscriptionId := info.ID
+	o := info.Content.Data.(*parser.BRC721Mint)
 	// check if the collection exists
 	collection, err := s.collectionUc.GetCollectionByTick(context.Background(), biz.ProtocolTypeBRC721, o.Tick)
 	if err != nil {
@@ -320,12 +321,12 @@ func (s *Syncer) processBRC721Mint(inscriptionId int64, info map[string]interfac
 		Tick:           o.Tick,
 		P:              biz.ProtocolTypeBRC721,
 		TokenID:        collection.Supply + 1,
-		TxHash:         info["genesis_transaction"].(string),
-		BlockHeight:    info["genesis_height"].(uint64),
-		BlockTime:      info["timestamp"].(time.Time),
-		Address:        info["address"].(string),
+		TxHash:         info.GenesisTx,
+		BlockHeight:    info.GenesisHeight,
+		BlockTime:      info.Timestamp,
+		Address:        info.Address,
 		InscriptionID:  inscriptionId,
-		InscriptionUID: info["uid"].(string),
+		InscriptionUID: info.UID,
 		CollectionID:   collection.ID,
 	}
 	token, err = s.tokenUc.CreateToken(context.Background(), token)
@@ -344,8 +345,9 @@ func (s *Syncer) processBRC721Mint(inscriptionId int64, info map[string]interfac
 	return nil
 }
 
-func (s *Syncer) processBRC721Update(inscriptionId int64, info map[string]interface{}) error {
-	o := info["content"].(*parser.BRC721Update)
+func (s *Syncer) processBRC721Update(info *page.Inscription) error {
+	inscriptionId := info.ID
+	o := info.Content.Data.(*parser.BRC721Update)
 	// check if the collection exists
 	collection, err := s.collectionUc.GetCollectionByTick(context.Background(), biz.ProtocolTypeBRC721, o.Tick)
 	if err != nil {
@@ -401,33 +403,19 @@ func (s *Syncer) readLastInscriptionIdFromFile() (int64, error) {
 	return id, nil
 }
 
-func (s *Syncer) parseInscriptions(inscriptionURL string) (string, error) {
-	if inscriptionURL == "" {
-		return "", nil
-	}
-	s.logger.Debugf("fetching %s", inscriptionURL)
-	resp, err := httpGet(inscriptionURL)
+func (s *Syncer) parseInscriptions(inscriptionId int64) error {
+	inscriptionsPage := page.NewInscriptionsPage(inscriptionId)
+	s.logger.Infof("parsing inscriptions page %s", inscriptionsPage.URL())
+	data, err := s.pageParser.Parse(inscriptionsPage)
 	if err != nil {
-		return "", err
+		return err
+	}
+	inscriptions, ok := data.(*page.Inscriptions)
+	if !ok {
+		return fmt.Errorf("invalid data type: %T for URL %s", data, inscriptionsPage.URL())
 	}
 
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	var insUids uids
-	links := doc.Find("div.thumbnails a")
-	links.Each(func(i int, s *goquery.Selection) {
-		href, _ := s.Attr("href")
-		uid := strings.Replace(href, "/inscription/", "", -1)
-		if uid == "" {
-			return
-		}
-		// record the inscription uids, so that we can process them in order
-		insUids = append(insUids, uid)
-	})
-
+	insUids := inscriptions.UIDs
 	s.processChan <- insUids
 	for _, insUid := range insUids {
 		s.inscriptionUidChan <- insUid
@@ -435,14 +423,12 @@ func (s *Syncer) parseInscriptions(inscriptionURL string) (string, error) {
 	// wait for the process to finish
 	err = <-s.processFinishedChan
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	prevLink := doc.Find("a.next")
-	if prevLink.Length() > 0 {
-		href, _ := prevLink.Attr("href")
-		inscriptionURL, _ = url.JoinPath(s.c.Server.Addr, href)
-		return s.parseInscriptions(inscriptionURL)
+	// check if there is a next page
+	if inscriptions.NextID != nil {
+		return s.parseInscriptions(*inscriptions.NextID)
 	}
-	return "", nil
+	return nil
 }

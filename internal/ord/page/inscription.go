@@ -15,6 +15,7 @@ type Inscription struct {
 	UID           string    `json:"uid"`
 	Address       string    `json:"address,omitempty"`
 	OutputValue   uint64    `json:"output_value,omitempty"`
+	Content       *Content  `json:"content,omitempty"`
 	ContentLength uint64    `json:"content_length,omitempty"`
 	ContentType   string    `json:"content_type,omitempty"`
 	Timestamp     time.Time `json:"timestamp,omitempty"`

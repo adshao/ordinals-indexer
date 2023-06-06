@@ -2,17 +2,11 @@ package ord
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"net/url"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/adshao/ordinals-indexer/internal/data"
-	"github.com/adshao/ordinals-indexer/internal/ord/parser"
+	"github.com/adshao/ordinals-indexer/internal/ord/page"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/go-kratos/kratos/v2/log"
 )
 
@@ -23,6 +17,7 @@ var (
 type Worker struct {
 	wid        int
 	baseURL    string
+	pageParser page.PageParser
 	data       *data.Data
 	uidChan    chan string
 	resultChan chan (*result)
@@ -46,118 +41,51 @@ func (w *Worker) Start() {
 func (w *Worker) processInscription(uid string) *result {
 	info, err := w.parseInscriptionInfo(uid)
 	if info == nil {
-		info = make(map[string]interface{})
+		info = &page.Inscription{}
 	}
-	info["uid"] = uid
+	if info.UID == "" {
+		info.UID = uid
+	}
 	// FIXME: inscription_id is not always available
-	inscriptionID, ok := info["inscription_id"].(int64)
-	if !ok {
+	if info.ID == 0 {
 		if err == nil {
 			err = fmt.Errorf("failed to get inscription_id")
 		}
-		return &result{inscriptionUid: uid, inscriptionId: 0, info: info, err: err}
+		return &result{info: info, err: err}
 	}
-	w.logger.Debugf("[worker %d] parsed inscription %d", w.wid, inscriptionID)
-	return &result{inscriptionUid: uid, inscriptionId: inscriptionID, info: info, err: err}
+	w.logger.Debugf("[worker %d] parsed inscription %d", w.wid, info.ID)
+	return &result{info: info, err: err}
 }
 
-func (w *Worker) parseInscriptionInfo(uid string) (map[string]interface{}, error) {
-	inscriptionURL, _ := url.JoinPath(w.baseURL, "inscription", uid)
-	w.logger.Debugf("[worker %d] fetching %s...", w.wid, inscriptionURL)
-	resp, err := httpGet(inscriptionURL)
+func (w *Worker) parseInscriptionInfo(uid string) (*page.Inscription, error) {
+	inscriptionPage := page.NewInscriptionPage(uid)
+	w.logger.Debugf("[worker %d] fetching %s...", w.wid, inscriptionPage.URL())
+	data, err := w.pageParser.Parse(inscriptionPage)
 	if err != nil {
 		return nil, err
 	}
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	inscription, ok := data.(*page.Inscription)
+	if !ok {
+		return nil, fmt.Errorf("invalid inscription page: %T", data)
+	}
+	content, err := w.parseContent(uid)
 	if err != nil {
 		return nil, err
 	}
-
-	details := make(map[string]interface{})
-	inscriptionIDText := doc.Find("h1").First().Text()
-	inscriptionIDText = strings.Replace(inscriptionIDText, "Inscription ", "", -1)
-	// convert inscriptionID string to int64
-	inscriptionID, err := strconv.ParseInt(inscriptionIDText, 10, 64)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert inscriptionID %s to int64: %v", inscriptionIDText, err)
-	}
-	details["inscription_id"] = inscriptionID
-
-	dtElements := doc.Find("dl dt")
-	ddElements := doc.Find("dl dd")
-	dtElements.Each(func(i int, dt *goquery.Selection) {
-		key := dt.Text()
-		dd := ddElements.Eq(i)
-		value := dd.Text()
-		if aTag := dd.Find("a"); aTag.Length() > 0 {
-			value = aTag.Text()
-		}
-		key = strings.Replace(strings.ToLower(key), " ", "_", -1)
-		switch key {
-		case "output_value":
-			v, _ := strconv.ParseUint(value, 10, 64)
-			details[key] = v
-		case "content_length":
-			// conver "3440 bytes" to 3440
-			value = strings.Replace(value, " bytes", "", -1)
-			v, _ := strconv.ParseUint(value, 10, 64)
-			details[key] = v
-		case "timestamp":
-			// convert "2023-05-28 03:28:17 UTC" to time.Time
-			v, _ := time.Parse("2006-01-02 15:04:05 UTC", value)
-			details[key] = v
-		case "genesis_height":
-			v, _ := strconv.ParseUint(value, 10, 64)
-			details[key] = v
-		case "genesis_fee":
-			v, _ := strconv.ParseUint(value, 10, 64)
-			details[key] = v
-		case "offset":
-			v, _ := strconv.ParseUint(value, 10, 64)
-			details[key] = v
-		default:
-			details[key] = value
-		}
-	})
-
-	err = w.parseContent(details)
-	if err != nil {
-		return nil, err
-	}
-	return details, nil
+	inscription.Content = content
+	return inscription, nil
 }
 
-func (w *Worker) parseContent(info map[string]interface{}) error {
-	contentURL, _ := url.JoinPath(w.baseURL, "content", info["id"].(string))
-	w.logger.Debugf("[worker %d] fetching %s...", w.wid, contentURL)
-	resp, err := httpGet(contentURL)
+func (w *Worker) parseContent(uid string) (*page.Content, error) {
+	contentPage := page.NewContentPage(uid)
+	w.logger.Debugf("[worker %d] fetching %s...", w.wid, contentPage.URL())
+	data, err := w.pageParser.Parse(contentPage)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
+	content, ok := data.(*page.Content)
+	if !ok {
+		return nil, fmt.Errorf("invalid content page: %T", data)
 	}
-
-	var found bool
-	for _, p := range parser.ParserList() {
-		data, valid, err := p.Parse(body)
-		if err != nil {
-			continue
-		}
-		if !valid {
-			continue
-		}
-		found = true
-		info["content"] = data
-		info["content_parser"] = p.Name()
-		break
-	}
-	if !found {
-		info["content"] = body
-		info["content_parser"] = "raw"
-	}
-	return nil
+	return content, nil
 }
