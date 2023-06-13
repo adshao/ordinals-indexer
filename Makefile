@@ -89,13 +89,11 @@ db:
 .PHONY: all
 # generate all
 all:
-	make api;
-	make errors;
-	make config;
-	make db;
-	make generate;
-	make check;
-	make test;
+	make api
+	make errors
+	make config
+	make db
+	make generate
 
 .PHONY: test unit-test check fmt vet
 test: unit-test
