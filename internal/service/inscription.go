@@ -40,7 +40,6 @@ func (s *InscriptionService) ListInscription(ctx context.Context, req *pb.ListIn
 	opt := &biz.InscriptionListOption{
 		Limit:  int(req.Limit),
 		Offset: int(req.Offset),
-		Order:  req.OrderBy,
 	}
 	inscriptions, err := s.inscription.ListInscriptions(ctx, opt)
 	if err != nil {

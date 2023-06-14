@@ -25,6 +25,18 @@ func NewTokenService(tokenUsecase *biz.TokenUsecase, logger log.Logger) *TokenSe
 }
 
 func (s *TokenService) GetToken(ctx context.Context, req *pb.GetTokenRequest) (*pb.TokenReply, error) {
+	if req.Tick == "" {
+		tokens, err := s.tokenUsecase.FindByInscriptionID(ctx, req.InscriptionId)
+		if err != nil {
+			return nil, err
+		}
+		if len(tokens) == 0 {
+			return nil, pb.ErrorTokenNotFound("token not found: %d", req.InscriptionId)
+		}
+		return &pb.TokenReply{
+			Data: s.fromBizToken(tokens[0]),
+		}, nil
+	}
 	if req.P == "" {
 		req.P = biz.ProtocolTypeBRC721
 	}

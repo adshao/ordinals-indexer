@@ -15,6 +15,9 @@ service Token {
   rpc GetToken (GetTokenRequest) returns (TokenReply) {
     option (google.api.http) = {
       get: "/v1/tokens/{tick}/{token_id}"
+      additional_bindings {
+        get: "/v1/inscription/token/{inscription_id}"
+      }
     };
   }
 
@@ -30,6 +33,7 @@ message GetTokenRequest {
   string tick = 1;
   uint64 token_id = 2;
   string p = 3;
+  int64 inscription_id = 4;
 }
 
 message TokenReply {

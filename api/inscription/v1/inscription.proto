@@ -47,9 +47,8 @@ message GetInscriptionReply {
 }
 
 message ListInscriptionRequest {
-	string order_by = 1;
-  	uint64 limit = 2;
-  	uint64 offset = 3;
+  	uint64 limit = 1;
+  	uint64 offset = 2;
 }
 
 message ListInscriptionReply {
