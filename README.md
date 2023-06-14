@@ -47,6 +47,14 @@ cd internal/data
 atlas migrate apply --dir 'file://ent/migrate/migrations' --url 'postgres://test:test@127.0.0.1/test'
 ```
 
+### Generate code
+
+Generate code for APIs, configs and database:
+
+```bash
+make all
+```
+
 ### Build binary
 
 Build the binaries for the API server and syncer:
