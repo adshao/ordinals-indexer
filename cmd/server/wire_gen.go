@@ -25,17 +25,17 @@ import (
 
 // wireApp init kratos application.
 func wireApp(confServer *conf.Server, confData *conf.Data, ord *conf.Ord, logger log.Logger) (*kratos.App, func(), error) {
+	pageParser := page.NewPageParser(ord)
 	dataData, cleanup, err := data.NewData(confData, logger)
 	if err != nil {
 		return nil, nil, err
 	}
 	collectionRepo := data.NewCollectionRepo(dataData, logger)
 	collectionUsecase := biz.NewCollectionUsecase(collectionRepo, logger)
-	collectionService := service.NewCollectionService(collectionUsecase, logger)
+	collectionService := service.NewCollectionService(pageParser, collectionUsecase, logger)
 	tokenRepo := data.NewTokenRepo(dataData, logger)
 	tokenUsecase := biz.NewTokenUsecase(tokenRepo, logger)
-	tokenService := service.NewTokenService(tokenUsecase, logger)
-	pageParser := page.NewPageParser(ord)
+	tokenService := service.NewTokenService(pageParser, tokenUsecase, logger)
 	inscriptionRepo := data.NewInscriptionRepo(dataData, logger)
 	inscriptionUsecase := biz.NewInscriptionUsecase(inscriptionRepo, logger)
 	inscriptionService := service.NewInscriptionService(pageParser, inscriptionUsecase, logger)

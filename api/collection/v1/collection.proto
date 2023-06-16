@@ -16,6 +16,13 @@ service Collection {
 			get: "/v1/collections/{tick}"
 		};
 	}
+
+	rpc GetInscriptionCollection (GetInscriptionCollectionRequest) returns (GetCollectionReply) {
+		option (google.api.http) = {
+			get: "/v1/inscriptions/collection/{inscription_id}"
+		};
+	}
+
 	rpc ListCollections (ListCollectionRequest) returns (ListCollectionReply) {
 		option (google.api.http) = {
 			get: "/v1/collections"
@@ -27,6 +34,11 @@ message GetCollectionRequest {
 	string tick = 1;
 	string p = 2;
 }
+
+message GetInscriptionCollectionRequest {
+	int64 inscription_id = 1;
+}
+
 message GetCollectionReply {
 	CollectionMessage data = 1;
 }

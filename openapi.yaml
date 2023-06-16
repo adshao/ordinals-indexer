@@ -81,6 +81,44 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/api.inscription.v1.ListInscriptionReply'
+    /v1/inscriptions/collection/{inscription_id}:
+        get:
+            tags:
+                - Collection
+            operationId: Collection_GetInscriptionCollection
+            parameters:
+                - name: inscription_id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    format: int64
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.collection.v1.GetCollectionReply'
+    /v1/inscriptions/token/{inscription_id}:
+        get:
+            tags:
+                - Token
+            operationId: Token_GetInscriptionToken
+            parameters:
+                - name: inscription_id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    format: int64
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/token.v1.TokenReply'
     /v1/inscriptions/{inscription_uid}:
         get:
             tags:
@@ -155,11 +193,6 @@ paths:
                   in: query
                   schema:
                     type: string
-                - name: inscription_id
-                  in: query
-                  schema:
-                    type: integer
-                    format: int64
             responses:
                 "200":
                     description: OK

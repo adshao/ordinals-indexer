@@ -9,17 +9,20 @@ import (
 
 	pb "github.com/adshao/ordinals-indexer/api/collection/v1"
 	"github.com/adshao/ordinals-indexer/internal/biz"
+	"github.com/adshao/ordinals-indexer/internal/ord/page"
 )
 
 type CollectionService struct {
 	pb.UnimplementedCollectionServer
 
+	p                 page.PageParser
 	collectionUsecase *biz.CollectionUsecase
 	log               *log.Helper
 }
 
-func NewCollectionService(collectionUsecase *biz.CollectionUsecase, logger log.Logger) *CollectionService {
+func NewCollectionService(p page.PageParser, collectionUsecase *biz.CollectionUsecase, logger log.Logger) *CollectionService {
 	return &CollectionService{
+		p:                 p,
 		collectionUsecase: collectionUsecase,
 		log:               log.NewHelper(logger),
 	}
@@ -38,6 +41,19 @@ func (s *CollectionService) GetCollection(ctx context.Context, req *pb.GetCollec
 	}
 	return &pb.GetCollectionReply{
 		Data: s.fromBizCollection(collection),
+	}, nil
+}
+
+func (s *CollectionService) GetInscriptionCollection(ctx context.Context, req *pb.GetInscriptionCollectionRequest) (*pb.GetCollectionReply, error) {
+	collections, err := s.collectionUsecase.GetCollectionByInscriptionID(ctx, req.InscriptionId)
+	if err != nil {
+		return nil, err
+	}
+	if len(collections) == 0 {
+		return nil, pb.ErrorCollectionNotFound("collection not found by inscription id: %d", req.InscriptionId)
+	}
+	return &pb.GetCollectionReply{
+		Data: s.fromBizCollection(collections[0]),
 	}, nil
 }
 

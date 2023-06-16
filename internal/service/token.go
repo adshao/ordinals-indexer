@@ -8,35 +8,26 @@ import (
 
 	pb "github.com/adshao/ordinals-indexer/api/token/v1"
 	"github.com/adshao/ordinals-indexer/internal/biz"
+	"github.com/adshao/ordinals-indexer/internal/ord/page"
 )
 
 type TokenService struct {
 	pb.UnimplementedTokenServer
 
+	p            page.PageParser
 	tokenUsecase *biz.TokenUsecase
 	log          *log.Helper
 }
 
-func NewTokenService(tokenUsecase *biz.TokenUsecase, logger log.Logger) *TokenService {
+func NewTokenService(p page.PageParser, tokenUsecase *biz.TokenUsecase, logger log.Logger) *TokenService {
 	return &TokenService{
+		p:            p,
 		tokenUsecase: tokenUsecase,
 		log:          log.NewHelper(logger),
 	}
 }
 
 func (s *TokenService) GetToken(ctx context.Context, req *pb.GetTokenRequest) (*pb.TokenReply, error) {
-	if req.Tick == "" {
-		tokens, err := s.tokenUsecase.FindByInscriptionID(ctx, req.InscriptionId)
-		if err != nil {
-			return nil, err
-		}
-		if len(tokens) == 0 {
-			return nil, pb.ErrorTokenNotFound("token not found: %d", req.InscriptionId)
-		}
-		return &pb.TokenReply{
-			Data: s.fromBizToken(tokens[0]),
-		}, nil
-	}
 	if req.P == "" {
 		req.P = biz.ProtocolTypeBRC721
 	}
@@ -49,6 +40,19 @@ func (s *TokenService) GetToken(ctx context.Context, req *pb.GetTokenRequest) (*
 	}
 	return &pb.TokenReply{
 		Data: s.fromBizToken(token),
+	}, nil
+}
+
+func (s *TokenService) GetInscriptionToken(ctx context.Context, req *pb.GetInscriptionTokenRequest) (*pb.TokenReply, error) {
+	tokens, err := s.tokenUsecase.FindByInscriptionID(ctx, req.InscriptionId)
+	if err != nil {
+		return nil, err
+	}
+	if len(tokens) == 0 {
+		return nil, pb.ErrorTokenNotFound("token not found by inscription id: %d", req.InscriptionId)
+	}
+	return &pb.TokenReply{
+		Data: s.fromBizToken(tokens[0]),
 	}, nil
 }
 

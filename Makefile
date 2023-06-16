@@ -69,6 +69,7 @@ errors:
          --proto_path=./third_party \
          --go_out=paths=source_relative:. \
          --go-errors_out=paths=source_relative:. \
+		 --experimental_allow_proto3_optional \
          $(API_PROTO_FILES)
 
 .PHONY: build
