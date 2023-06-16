@@ -57,7 +57,7 @@ func (p *InscriptionPage) Parse(r io.Reader) (interface{}, error) {
 	// convert inscriptionID string to int64
 	inscriptionID, err := strconv.ParseInt(inscriptionIDText, 10, 64)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert inscriptionID %s to int64: %v", inscriptionIDText, err)
+		return nil, fmt.Errorf("failed to convert inscriptionID %s to int64 for uid %s: %v", inscriptionIDText, p.UID, err)
 	}
 	inscription.ID = inscriptionID
 
