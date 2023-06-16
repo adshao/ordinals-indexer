@@ -9,6 +9,7 @@ import (
 	"github.com/adshao/ordinals-indexer/internal/biz"
 	"github.com/adshao/ordinals-indexer/internal/conf"
 	"github.com/adshao/ordinals-indexer/internal/data"
+	"github.com/adshao/ordinals-indexer/internal/ord/page"
 	"github.com/adshao/ordinals-indexer/internal/server"
 	"github.com/adshao/ordinals-indexer/internal/service"
 
@@ -18,6 +19,6 @@ import (
 )
 
 // wireApp init kratos application.
-func wireApp(*conf.Server, *conf.Data, log.Logger) (*kratos.App, func(), error) {
-	panic(wire.Build(server.ProviderSet, data.ProviderSet, biz.ProviderSet, service.ProviderSet, newApp))
+func wireApp(*conf.Server, *conf.Data, *conf.Ord, log.Logger) (*kratos.App, func(), error) {
+	panic(wire.Build(server.ProviderSet, data.ProviderSet, biz.ProviderSet, service.ProviderSet, page.ProviderSet, newApp))
 }

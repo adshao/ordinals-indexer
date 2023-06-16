@@ -6,8 +6,12 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/google/wire"
+
 	"github.com/adshao/ordinals-indexer/internal/conf"
 )
+
+var ProviderSet = wire.NewSet(NewPageParser)
 
 func NewPageParser(c *conf.Ord) PageParser {
 	return &pageParser{

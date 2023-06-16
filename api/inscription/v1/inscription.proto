@@ -11,7 +11,7 @@ option java_package = "api.inscription.v1";
 service Inscription {
 	rpc GetInscription (GetInscriptionRequest) returns (GetInscriptionReply) {
 		option (google.api.http) = {
-			get: "/v1/inscriptions/{inscription_id}"
+			get: "/v1/inscriptions/{inscription_uid}"
 		};
 	};
 	rpc ListInscription (ListInscriptionRequest) returns (ListInscriptionReply) {
@@ -22,7 +22,7 @@ service Inscription {
 }
 
 message GetInscriptionRequest {
-	int64 inscription_id = 1;
+	string inscription_uid = 1;
 }
 
 message InscriptionMessage {
@@ -47,8 +47,7 @@ message GetInscriptionReply {
 }
 
 message ListInscriptionRequest {
-  	uint64 limit = 1;
-  	uint64 offset = 2;
+  	optional int64 inscription_id = 1;
 }
 
 message ListInscriptionReply {
@@ -57,6 +56,6 @@ message ListInscriptionReply {
 }
 
 message Paging {
-	uint64 total_count = 1;
-	uint64 count = 2;
+	optional int64 next_id = 1;
+	optional int64 prev_id = 2;
 }

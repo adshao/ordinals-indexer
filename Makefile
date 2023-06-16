@@ -59,6 +59,7 @@ api:
  	       --go-http_out=paths=source_relative:./api \
  	       --go-grpc_out=paths=source_relative:./api \
 	       --openapi_out=fq_schema_naming=true,default_response=false,naming=proto:. \
+		   --experimental_allow_proto3_optional \
 	       $(API_PROTO_FILES)
 
 .PHONY: errors

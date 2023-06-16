@@ -12,6 +12,7 @@ import (
 type Inscriptions struct {
 	UIDs   []string `json:"uids"`
 	NextID *int64   `json:"next_id,omitempty"`
+	PrevID *int64   `json:"prev_id,omitempty"`
 }
 
 type InscriptionsPage struct {
@@ -60,15 +61,25 @@ func (p *InscriptionsPage) Parse(r io.Reader) (interface{}, error) {
 		inscriptions.UIDs = append(inscriptions.UIDs, uid)
 	})
 
-	prevLink := doc.Find("a.next")
-	if prevLink.Length() > 0 {
-		href, _ := prevLink.Attr("href")
+	nextLink := doc.Find("a.next")
+	if nextLink.Length() > 0 {
+		href, _ := nextLink.Attr("href")
 		nextIDText := strings.Replace(href, "/inscriptions/", "", -1)
 		nextID, err := strconv.ParseInt(nextIDText, 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert nextID %s to int64: %v", nextIDText, err)
 		}
 		inscriptions.NextID = &nextID
+	}
+	prevLink := doc.Find("a.prev")
+	if prevLink.Length() > 0 {
+		href, _ := prevLink.Attr("href")
+		prevIDText := strings.Replace(href, "/inscriptions/", "", -1)
+		prevID, err := strconv.ParseInt(prevIDText, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert prevID %s to int64: %v", prevIDText, err)
+		}
+		inscriptions.PrevID = &prevID
 	}
 	return inscriptions, nil
 }

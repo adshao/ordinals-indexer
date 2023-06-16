@@ -8,56 +8,94 @@ import (
 
 	pb "github.com/adshao/ordinals-indexer/api/inscription/v1"
 	"github.com/adshao/ordinals-indexer/internal/biz"
+	"github.com/adshao/ordinals-indexer/internal/ord/page"
 )
 
 type InscriptionService struct {
 	pb.UnimplementedInscriptionServer
 
+	p           page.PageParser
 	inscription *biz.InscriptionUsecase
 	log         *log.Helper
 }
 
-func NewInscriptionService(inscription *biz.InscriptionUsecase, logger log.Logger) *InscriptionService {
+func NewInscriptionService(p page.PageParser, inscription *biz.InscriptionUsecase, logger log.Logger) *InscriptionService {
 	return &InscriptionService{
+		p:           p,
 		inscription: inscription,
 		log:         log.NewHelper(logger),
 	}
 }
 
 func (s *InscriptionService) GetInscription(ctx context.Context, req *pb.GetInscriptionRequest) (*pb.GetInscriptionReply, error) {
-	res, err := s.inscription.FindByInscriptionID(ctx, req.InscriptionId)
+	inscriptionPage := page.NewInscriptionPage(req.InscriptionUid)
+	res, err := s.p.Parse(inscriptionPage)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, pb.ErrorInscriptionNotFound("inscription not found: %d", req.InscriptionId)
-	}
+	inscription := res.(*page.Inscription)
 	return &pb.GetInscriptionReply{
-		Data: s.fromBizInscription(res),
+		Data: &pb.InscriptionMessage{
+			Id:            inscription.ID,
+			InscriptionId: inscription.ID,
+			Uid:           inscription.UID,
+			Address:       inscription.Address,
+			OutputValue:   inscription.OutputValue,
+			ContentLength: inscription.ContentLength,
+			ContentType:   inscription.ContentType,
+			Timestamp:     timestamppb.New(inscription.Timestamp),
+			GenesisHeight: inscription.GenesisHeight,
+			GenesisFee:    inscription.GenesisFee,
+			GenesisTx:     inscription.GenesisTx,
+			Location:      inscription.Location,
+			Output:        inscription.Output,
+			Offset:        inscription.Offset,
+		},
 	}, nil
 }
+
 func (s *InscriptionService) ListInscription(ctx context.Context, req *pb.ListInscriptionRequest) (*pb.ListInscriptionReply, error) {
-	opt := &biz.InscriptionListOption{
-		Limit:  int(req.Limit),
-		Offset: int(req.Offset),
+	var inscriptionsPage *page.InscriptionsPage
+	if req.InscriptionId != nil {
+		inscriptionsPage = page.NewInscriptionsPage(*req.InscriptionId)
+	} else {
+		inscriptionsPage = page.NewInscriptionsPage()
 	}
-	inscriptions, err := s.inscription.ListInscriptions(ctx, opt)
+	res, err := s.p.Parse(inscriptionsPage)
 	if err != nil {
 		return nil, err
 	}
-	totalCount, err := s.inscription.CountInscriptions(ctx, opt)
-	if err != nil {
-		return nil, err
-	}
+	inscriptions := res.(*page.Inscriptions)
 	var data []*pb.InscriptionMessage
-	for _, inscription := range inscriptions {
-		data = append(data, s.fromBizInscription(inscription))
+	for _, uid := range inscriptions.UIDs {
+		inscriptionPage := page.NewInscriptionPage(uid)
+		res, err := s.p.Parse(inscriptionPage)
+		if err != nil {
+			return nil, err
+		}
+		inscription := res.(*page.Inscription)
+		data = append(data, &pb.InscriptionMessage{
+			Id:            inscription.ID,
+			InscriptionId: inscription.ID,
+			Uid:           inscription.UID,
+			Address:       inscription.Address,
+			OutputValue:   inscription.OutputValue,
+			ContentLength: inscription.ContentLength,
+			ContentType:   inscription.ContentType,
+			Timestamp:     timestamppb.New(inscription.Timestamp),
+			GenesisHeight: inscription.GenesisHeight,
+			GenesisFee:    inscription.GenesisFee,
+			GenesisTx:     inscription.GenesisTx,
+			Location:      inscription.Location,
+			Output:        inscription.Output,
+			Offset:        inscription.Offset,
+		})
 	}
 	return &pb.ListInscriptionReply{
 		Data: data,
 		Paging: &pb.Paging{
-			TotalCount: uint64(totalCount),
-			Count:      uint64(len(data)),
+			PrevId: inscriptions.PrevID,
+			NextId: inscriptions.NextID,
 		},
 	}, nil
 }

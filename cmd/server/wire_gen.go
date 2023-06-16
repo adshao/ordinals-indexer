@@ -10,6 +10,7 @@ import (
 	"github.com/adshao/ordinals-indexer/internal/biz"
 	"github.com/adshao/ordinals-indexer/internal/conf"
 	"github.com/adshao/ordinals-indexer/internal/data"
+	"github.com/adshao/ordinals-indexer/internal/ord/page"
 	"github.com/adshao/ordinals-indexer/internal/server"
 	"github.com/adshao/ordinals-indexer/internal/service"
 	"github.com/go-kratos/kratos/v2"
@@ -23,7 +24,7 @@ import (
 // Injectors from wire.go:
 
 // wireApp init kratos application.
-func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*kratos.App, func(), error) {
+func wireApp(confServer *conf.Server, confData *conf.Data, ord *conf.Ord, logger log.Logger) (*kratos.App, func(), error) {
 	dataData, cleanup, err := data.NewData(confData, logger)
 	if err != nil {
 		return nil, nil, err
@@ -34,9 +35,10 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	tokenRepo := data.NewTokenRepo(dataData, logger)
 	tokenUsecase := biz.NewTokenUsecase(tokenRepo, logger)
 	tokenService := service.NewTokenService(tokenUsecase, logger)
+	pageParser := page.NewPageParser(ord)
 	inscriptionRepo := data.NewInscriptionRepo(dataData, logger)
 	inscriptionUsecase := biz.NewInscriptionUsecase(inscriptionRepo, logger)
-	inscriptionService := service.NewInscriptionService(inscriptionUsecase, logger)
+	inscriptionService := service.NewInscriptionService(pageParser, inscriptionUsecase, logger)
 	grpcServer := server.NewGRPCServer(confServer, collectionService, tokenService, inscriptionService, logger)
 	httpServer := server.NewHTTPServer(confServer, collectionService, tokenService, inscriptionService, logger)
 	app := newApp(logger, grpcServer, httpServer)

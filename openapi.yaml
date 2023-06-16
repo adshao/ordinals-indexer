@@ -69,20 +69,11 @@ paths:
                 - Inscription
             operationId: Inscription_ListInscription
             parameters:
-                - name: order_by
-                  in: query
-                  schema:
-                    type: string
-                - name: limit
+                - name: inscription_id
                   in: query
                   schema:
                     type: integer
-                    format: uint64
-                - name: offset
-                  in: query
-                  schema:
-                    type: integer
-                    format: uint64
+                    format: int64
             responses:
                 "200":
                     description: OK
@@ -90,18 +81,17 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/api.inscription.v1.ListInscriptionReply'
-    /v1/inscriptions/{inscription_id}:
+    /v1/inscriptions/{inscription_uid}:
         get:
             tags:
                 - Inscription
             operationId: Inscription_GetInscription
             parameters:
-                - name: inscription_id
+                - name: inscription_uid
                   in: path
                   required: true
                   schema:
-                    type: integer
-                    format: int64
+                    type: string
             responses:
                 "200":
                     description: OK
@@ -298,12 +288,12 @@ components:
         api.inscription.v1.Paging:
             type: object
             properties:
-                total_count:
+                next_id:
                     type: integer
-                    format: uint64
-                count:
+                    format: int64
+                prev_id:
                     type: integer
-                    format: uint64
+                    format: int64
         token.v1.ListTokenReply:
             type: object
             properties:
