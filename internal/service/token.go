@@ -87,7 +87,7 @@ func (s *TokenService) ListTokens(ctx context.Context, req *pb.ListTokenRequest)
 }
 
 func (s *TokenService) fromBizToken(token *biz.Token) *pb.TokenMessage {
-	return &pb.TokenMessage{
+	t := &pb.TokenMessage{
 		P:              token.P,
 		Tick:           token.Tick,
 		TokenId:        token.TokenID,
@@ -98,4 +98,14 @@ func (s *TokenService) fromBizToken(token *biz.Token) *pb.TokenMessage {
 		InscriptionId:  token.InscriptionID,
 		InscriptionUid: token.InscriptionUID,
 	}
+	if token.Sig.Signature != "" {
+		t.Sig = &pb.MintSig{
+			S:    token.Sig.Signature,
+			Rec:  token.Sig.Receiver,
+			Uid:  token.Sig.Uid,
+			Expt: token.Sig.ExpiredTime,
+			Exph: token.Sig.ExpiredHeight,
+		}
+	}
+	return t
 }

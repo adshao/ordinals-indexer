@@ -43,6 +43,7 @@ func (r *collectionRepo) Create(ctx context.Context, g *biz.Collection) (*biz.Co
 		SetAddress(g.Address).
 		SetInscriptionID(g.InscriptionID).
 		SetInscriptionUID(g.InscriptionUID).
+		SetSig(g.Sig).
 		Save(ctx)
 	if err != nil {
 		return nil, err
@@ -68,6 +69,7 @@ func (r *collectionRepo) fromDbCollection(t *ent.Collection) *biz.Collection {
 		Address:        t.Address,
 		InscriptionID:  t.InscriptionID,
 		InscriptionUID: t.InscriptionUID,
+		Sig:            t.Sig,
 	}
 	return collection
 }
@@ -89,6 +91,7 @@ func (r *collectionRepo) Update(ctx context.Context, g *biz.Collection) (*biz.Co
 		SetAddress(g.Address).
 		SetInscriptionID(g.InscriptionID).
 		SetInscriptionUID(g.InscriptionUID).
+		SetSig(g.Sig).
 		Save(ctx)
 	if err != nil {
 		return nil, err

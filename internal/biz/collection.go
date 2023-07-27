@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/adshao/go-brc721/sig"
 	"github.com/go-kratos/kratos/v2/log"
 )
 
@@ -25,6 +26,7 @@ type Collection struct {
 	Address        string                   `json:"address,omitempty"`
 	InscriptionID  int64                    `json:"inscription_id"`
 	InscriptionUID string                   `json:"inscription_uid"`
+	Sig            sig.DeploySig            `json:"sig,omitempty"`
 }
 
 type CollectionListOption struct {

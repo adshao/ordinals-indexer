@@ -5,6 +5,8 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+
+	"github.com/adshao/go-brc721/sig"
 )
 
 // Collection holds the schema definition for the Collection entity.
@@ -36,6 +38,7 @@ func (Collection) Fields() []ent.Field {
 		field.String("address"),
 		field.Int64("inscription_id").Unique(),
 		field.String("inscription_uid").Unique(),
+		field.JSON("sig", sig.DeploySig{}).Optional(),
 	}
 }
 

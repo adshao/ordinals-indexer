@@ -5,6 +5,8 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+
+	"github.com/adshao/go-brc721/sig"
 )
 
 // Token holds the schema definition for the Token entity.
@@ -30,6 +32,8 @@ func (Token) Fields() []ent.Field {
 		field.String("address"),
 		field.Int64("inscription_id").Unique(),
 		field.String("inscription_uid").Unique(),
+		field.JSON("sig", sig.MintSig{}).Optional(),
+		field.String("sig_uid"),
 	}
 }
 
@@ -48,5 +52,6 @@ func (Token) Indexes() []ent.Index {
 		index.Fields("tx_hash"),
 		index.Fields("inscription_id").Unique(),
 		index.Fields("block_height"),
+		index.Fields("sig_uid"),
 	}
 }

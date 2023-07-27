@@ -59,6 +59,12 @@ message CollectionMessage {
 	string address = 13;
 	int64 inscription_id = 14;
 	string inscription_uid = 15;
+	optional DeploySig sig = 16;
+}
+
+message DeploySig {
+	string pk = 1;
+	repeated string fields = 2;
 }
 
 message ListCollectionRequest {

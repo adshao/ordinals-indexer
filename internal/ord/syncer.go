@@ -18,6 +18,7 @@ import (
 	"github.com/adshao/ordinals-indexer/internal/ord/page"
 	"github.com/adshao/ordinals-indexer/internal/ord/parser"
 
+	"github.com/adshao/go-brc721/sig"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
 )
@@ -262,6 +263,15 @@ func (s *Syncer) processBRC721Deploy(info *page.Inscription) error {
 		}
 		return nil
 	}
+	// check deploy sig
+	if o.Sig != nil && o.Sig.PubKey != "" && len(o.Sig.Fields) > 0 {
+		// parse pubkey
+		_, err = sig.ParsePubKey(o.Sig.PubKey)
+		if err != nil {
+			s.logger.Warnf("invalid public key %s, ignore inscription %d", o.Sig.PubKey, info.ID)
+			return nil
+		}
+	}
 	// create the collection
 	collection = &biz.Collection{
 		P:      biz.ProtocolTypeBRC721,
@@ -288,6 +298,9 @@ func (s *Syncer) processBRC721Deploy(info *page.Inscription) error {
 	collection.Address = info.Address
 	collection.InscriptionID = info.ID
 	collection.InscriptionUID = info.UID
+	if o.Sig != nil {
+		collection.Sig = *o.Sig
+	}
 	collection, err = s.collectionUc.CreateCollection(context.Background(), collection)
 	if err != nil {
 		return err
@@ -305,17 +318,17 @@ func (s *Syncer) processBRC721Mint(info *page.Inscription) error {
 		return err
 	}
 	if collection == nil {
-		s.logger.Infof("collection %s not found, ignore inscription %d", o.Tick, inscriptionId)
+		s.logger.Infof("collection %s not found, ignore mint inscription %d", o.Tick, inscriptionId)
 		return nil
 	}
 	if collection.InscriptionID >= inscriptionId {
-		s.logger.Warnf("collection %s inscriptionId %d is greater than %d, ignore inscription %d", o.Tick, collection.InscriptionID, inscriptionId, inscriptionId)
+		s.logger.Warnf("collection %s inscriptionId %d is greater than %d, ignore mint inscription %d", o.Tick, collection.InscriptionID, inscriptionId, inscriptionId)
 		return nil
 	}
 	s.logger.Debugf("collection: %+v", collection)
 	// check if supply is full
 	if collection.Supply >= collection.Max {
-		s.logger.Infof("collection %s supply is full, ignore inscription %d", o.Tick, inscriptionId)
+		s.logger.Infof("collection %s supply is full, ignore mint inscription %d", o.Tick, inscriptionId)
 		return nil
 	}
 	t, err := s.tokenUc.FindByInscriptionID(context.Background(), inscriptionId)
@@ -323,8 +336,84 @@ func (s *Syncer) processBRC721Mint(info *page.Inscription) error {
 		return err
 	}
 	if len(t) > 0 {
-		s.logger.Infof("token with inscription %d already processed, ignore", inscriptionId)
+		s.logger.Infof("token with inscription %d already processed, ignore mint inscription", inscriptionId)
 		return nil
+	}
+	var mintSig *sig.MintSig
+	// check mint sig
+	if collection.Sig.PubKey != "" && len(collection.Sig.Fields) > 0 {
+		// verify mint sig
+		if o.Sig == nil {
+			s.logger.Warnf("missing mint sig for collection %s, ignore mint inscription %d", o.Tick, inscriptionId)
+			return nil
+		}
+		if o.Sig.Signature == "" {
+			s.logger.Warnf("missing mint sig.s for collection %s, ignore mint inscription %d", o.Tick, inscriptionId)
+			return nil
+		}
+		mintSig = &sig.MintSig{
+			Signature: o.Sig.Signature,
+		}
+		for _, field := range collection.Sig.Fields {
+			switch field {
+			case sig.SigFieldReceiver:
+				mintSig.Receiver = info.Address
+			case sig.SigFieldUid:
+				if o.Sig.Uid == "" {
+					s.logger.Warnf("missing mint sig.uid for collection %s, ignore mint inscription %d", o.Tick, inscriptionId)
+					return nil
+				}
+				utoken, err := s.tokenUc.FindByTickSigUID(context.Background(), biz.ProtocolTypeBRC721, o.Tick, o.Sig.Uid)
+				if err != nil {
+					s.logger.Errorf("failed to find token by tick %s and sig.uid %s: %v", o.Tick, o.Sig.Uid, err)
+					return err
+				}
+				if utoken != nil {
+					s.logger.Warnf("mint sig.uid %s already exists for collection %s, ignore mint inscription %d", o.Sig.Uid, o.Tick, inscriptionId)
+					return nil
+				}
+				mintSig.Uid = o.Sig.Uid
+			case sig.SigFieldExpiredTime:
+				if o.Sig.ExpiredTime == 0 {
+					s.logger.Warnf("missing mint sig.expt for collection %s, ignore mint inscription %d", o.Tick, inscriptionId)
+					return nil
+				}
+				// parse '2023-07-27 12:51:49 UTC' to unix timestamp in seconds
+				if info.Timestamp.IsZero() {
+					s.logger.Errorf("Impossible! Invalid timestamp %s for collection %s, ignore mint inscription %d", info.Timestamp, o.Tick, inscriptionId)
+					return err
+				}
+				if uint64(info.Timestamp.Unix()) > o.Sig.ExpiredTime {
+					s.logger.Warnf("mint sig.expt %d is expired for collection %s, ignore mint inscription %d", o.Sig.ExpiredTime, o.Tick, inscriptionId)
+					return nil
+				}
+				mintSig.ExpiredTime = o.Sig.ExpiredTime
+			case sig.SigFieldExpiredHeight:
+				if o.Sig.ExpiredHeight == 0 {
+					s.logger.Warnf("missing mint sig.exph for collection %s, ignore mint inscription %d", o.Tick, inscriptionId)
+					return nil
+				}
+				if info.GenesisHeight > o.Sig.ExpiredHeight {
+					s.logger.Warnf("mint sig.exph %d is expired for collection %s, ignore mint inscription %d", o.Sig.ExpiredHeight, o.Tick, inscriptionId)
+					return nil
+				}
+				mintSig.ExpiredHeight = o.Sig.ExpiredHeight
+			}
+		}
+		pubKey, err := sig.ParsePubKey(collection.Sig.PubKey)
+		if err != nil {
+			s.logger.Errorf("Impossible! Invalid public key %s for collection %s, ignore mint inscription %d", collection.Sig.PubKey, o.Tick, inscriptionId)
+			return err
+		}
+		valid, err := mintSig.Verify(pubKey)
+		if err != nil {
+			s.logger.Warnf("failed to verify mint sig for collection %s, ignore mint inscription %d: %v", o.Tick, inscriptionId, err)
+			return nil
+		}
+		if !valid {
+			s.logger.Warnf("invalid mint sig for collection %s, ignore mint inscription %d", o.Tick, inscriptionId)
+			return nil
+		}
 	}
 	// create token
 	token := &biz.Token{
@@ -338,6 +427,9 @@ func (s *Syncer) processBRC721Mint(info *page.Inscription) error {
 		InscriptionID:  inscriptionId,
 		InscriptionUID: info.UID,
 		CollectionID:   collection.ID,
+	}
+	if mintSig != nil {
+		token.Sig = *mintSig
 	}
 	token, err = s.tokenUc.CreateToken(context.Background(), token)
 	if err != nil {

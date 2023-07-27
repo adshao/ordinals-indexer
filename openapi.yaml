@@ -242,6 +242,17 @@ components:
                     format: int64
                 inscription_uid:
                     type: string
+                sig:
+                    $ref: '#/components/schemas/api.collection.v1.DeploySig'
+        api.collection.v1.DeploySig:
+            type: object
+            properties:
+                pk:
+                    type: string
+                fields:
+                    type: array
+                    items:
+                        type: string
         api.collection.v1.GetCollectionReply:
             type: object
             properties:
@@ -336,6 +347,21 @@ components:
                         $ref: '#/components/schemas/token.v1.TokenMessage'
                 paging:
                     $ref: '#/components/schemas/token.v1.Paging'
+        token.v1.MintSig:
+            type: object
+            properties:
+                s:
+                    type: string
+                uid:
+                    type: string
+                expt:
+                    type: integer
+                    format: uint64
+                exph:
+                    type: integer
+                    format: uint64
+                rec:
+                    type: string
         token.v1.Paging:
             type: object
             properties:
@@ -370,6 +396,8 @@ components:
                     format: int64
                 inscription_uid:
                     type: string
+                sig:
+                    $ref: '#/components/schemas/token.v1.MintSig'
             description: The response message containing the token
         token.v1.TokenReply:
             type: object
