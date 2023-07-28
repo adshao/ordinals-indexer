@@ -14,7 +14,7 @@ GOARCH  := $(if $(GOARCH),$(GOARCH),$(shell go env GOARCH))
 GOENV   := GO111MODULE=on CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH)
 GO      := $(GOENV) go
 GOBUILD := $(GO) build $(BUILD_FLAGS)
-GOTEST  := CGO_ENABLED=0 $(GO) test -p 4
+GOTEST  := GO111MODULE=on CGO_ENABLED=1 GOOS=$(GOOS) GOARCH=$(GOARCH) go
 
 FAIL_ON_STDOUT := awk '{ print } END { if (NR > 0) { exit 1 } }'
 
@@ -101,7 +101,7 @@ all:
 test: unit-test
 
 unit-test:
-	$(GO) test ./... -covermode=count -coverprofile=coverage.out
+	$(GOTEST) test ./... -covermode=count -coverprofile=coverage.out
 
 check: fmt vet
 
