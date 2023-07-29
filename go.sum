@@ -8,8 +8,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/DATA-DOG/go-sqlmock v1.5.0 h1:Shsta01QNfFxHCfpW6YH2STWB0MudeXXEWMr20OEh60=
 github.com/PuerkitoBio/goquery v1.8.1 h1:uQxhNlArOIdbrH1tr0UXwdVFgDcZDrZVdcpygAcwmWM=
 github.com/PuerkitoBio/goquery v1.8.1/go.mod h1:Q8ICL1kNUJ2sXGoAhPGUdYDJvgQgHzJsnnd3H7Ho5jQ=
-github.com/adshao/go-brc721 v0.2.0 h1:9R3hLW5mVM/nvIR2fjdsSzARN4HFHoyStbLvfBUg608=
-github.com/adshao/go-brc721 v0.2.0/go.mod h1:hoOpTC3oo87z26sv+evnQ8mXDCEDVaZSekT0elyaUt0=
+github.com/adshao/go-brc721 v0.3.0 h1:P7C4E+lnvuxASx05P7Nez34iAoMH3+NpgQMThH1jC+U=
+github.com/adshao/go-brc721 v0.3.0/go.mod h1:hoOpTC3oo87z26sv+evnQ8mXDCEDVaZSekT0elyaUt0=
 github.com/agext/levenshtein v1.2.1 h1:QmvMAjj2aEICytGiWzmxoE0x2KZvE0fvmqMOfy2tjT8=
 github.com/agext/levenshtein v1.2.1/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/andybalholm/cascadia v1.3.1 h1:nhxRkql1kdYCc8Snf7D5/D3spOX+dBgjA6u8x004T2c=

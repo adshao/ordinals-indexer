@@ -5,7 +5,8 @@ go 1.18
 require (
 	entgo.io/ent v0.12.3
 	github.com/PuerkitoBio/goquery v1.8.1
-	github.com/adshao/go-brc721 v0.2.0
+	github.com/adshao/go-brc721 v0.3.0
+	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/go-kratos/kratos/contrib/log/logrus/v2 v2.0.0-20230530065457-69d73225a921
 	github.com/go-kratos/kratos/v2 v2.6.2
 	github.com/go-redis/redis/extra/redisotel v0.3.0
@@ -29,7 +30,6 @@ require (
 	github.com/agext/levenshtein v1.2.1 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
-	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect

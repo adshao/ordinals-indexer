@@ -265,11 +265,10 @@ func (s *Syncer) processBRC721Deploy(info *page.Inscription) error {
 		return nil
 	}
 	// check deploy sig
-	if o.Sig != nil && o.Sig.PubKey != "" && len(o.Sig.Fields) > 0 {
-		// parse pubkey
-		_, err = sig.ParsePubKey(o.Sig.PubKey)
+	if o.Sig != nil {
+		err = o.Sig.Validate()
 		if err != nil {
-			s.logger.Warnf("invalid public key %s, ignore inscription %d", o.Sig.PubKey, info.ID)
+			s.logger.Warnf("invalid deploy sig for collection %s, ignore inscription %d", o.Tick, info.ID)
 			return nil
 		}
 	}
@@ -281,7 +280,8 @@ func (s *Syncer) processBRC721Deploy(info *page.Inscription) error {
 	}
 	max, err := strconv.ParseUint(o.Max, 10, 64)
 	if err != nil {
-		return err
+		s.logger.Warnf("invalid max %s, ignore inscription %d", o.Max, info.ID)
+		return nil
 	}
 	collection.Max = max
 	if o.BaseURI != nil {
