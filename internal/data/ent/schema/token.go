@@ -33,7 +33,7 @@ func (Token) Fields() []ent.Field {
 		field.Int64("inscription_id").Unique(),
 		field.String("inscription_uid").Unique(),
 		field.JSON("sig", sig.MintSig{}).Optional(),
-		field.String("sig_uid"),
+		field.String("sig_uid").Default(""),
 	}
 }
 
