@@ -42,6 +42,8 @@ func (r *tokenRepo) Create(ctx context.Context, g *biz.Token) (*biz.Token, error
 		SetCollection(&ent.Collection{ID: g.CollectionID}).
 		SetBlockTime(g.BlockTime).
 		SetAddress(g.Address).
+		SetSig(g.Sig).
+		SetSigUID(g.Sig.Uid).
 		Save(ctx)
 	if err != nil {
 		return nil, err
@@ -61,6 +63,7 @@ func (r *tokenRepo) fromDbToken(t *ent.Token) *biz.Token {
 		Address:        t.Address,
 		InscriptionID:  t.InscriptionID,
 		InscriptionUID: t.InscriptionUID,
+		Sig:            t.Sig,
 	}
 	if t.Edges.Collection != nil {
 		token.CollectionID = t.Edges.Collection.ID
@@ -78,7 +81,9 @@ func (r *tokenRepo) Update(ctx context.Context, g *biz.Token) (*biz.Token, error
 		SetInscriptionID(g.InscriptionID).
 		SetInscriptionUID(g.InscriptionUID).
 		SetBlockTime(g.BlockTime).
-		SetAddress(g.Address)
+		SetAddress(g.Address).
+		SetSig(g.Sig).
+		SetSigUID(g.Sig.Uid)
 	if g.CollectionID != 0 {
 		u.SetCollection(&ent.Collection{ID: g.CollectionID})
 	}
@@ -110,6 +115,17 @@ func (r *tokenRepo) FindByInscriptionID(ctx context.Context, id int64) ([]*biz.T
 		ret = append(ret, r.fromDbToken(token))
 	}
 	return ret, nil
+}
+
+func (r *tokenRepo) FindByTickSigUID(ctx context.Context, p, tick, sigUID string) (*biz.Token, error) {
+	res, err := r.data.db.Token.Query().Where(token.P(p), token.Tick(tick), token.SigUID(sigUID)).WithCollection().Only(ctx)
+	if err == nil {
+		return r.fromDbToken(res), nil
+	}
+	if ent.IsNotFound(err) {
+		return nil, nil
+	}
+	return nil, err
 }
 
 func (r *tokenRepo) List(ctx context.Context, opts ...biz.TokenListOption) ([]*biz.Token, error) {

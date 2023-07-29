@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"github.com/adshao/go-brc721/sig"
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -34,12 +35,13 @@ type BRC721Meta struct {
 }
 
 type BRC721Deploy struct {
-	P       string      `json:"p"`
-	Op      string      `json:"op"`
-	Tick    string      `json:"tick"`
-	Max     string      `json:"max"`
-	BaseURI *string     `json:"buri"`
-	Meta    *BRC721Meta `json:"meta"`
+	P       string         `json:"p"`
+	Op      string         `json:"op"`
+	Tick    string         `json:"tick"`
+	Max     string         `json:"max"`
+	BaseURI *string        `json:"buri"`
+	Meta    *BRC721Meta    `json:"meta"`
+	Sig     *sig.DeploySig `json:"sig"`
 }
 
 func (m BRC721Deploy) Validate() bool {
@@ -78,9 +80,10 @@ func (p *BRC721DeployParser) Parse(data []byte) (interface{}, bool, error) {
 }
 
 type BRC721Mint struct {
-	P    string `json:"p"`
-	Op   string `json:"op"`
-	Tick string `json:"tick"`
+	P    string       `json:"p"`
+	Op   string       `json:"op"`
+	Tick string       `json:"tick"`
+	Sig  *sig.MintSig `json:"sig"`
 }
 
 func (m BRC721Mint) Validate() bool {
@@ -107,6 +110,7 @@ func (p *BRC721MintParser) Parse(data []byte) (interface{}, bool, error) {
 	var mint BRC721Mint
 	err := json.Unmarshal(data, &mint)
 	if err != nil {
+		// TODO: try protojson.Unmarshal, this will fix the issue of unmarshaling string to int64
 		return nil, false, err
 	}
 	return &mint, mint.Validate(), nil

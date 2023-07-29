@@ -108,5 +108,14 @@ func (s *CollectionService) fromBizCollection(collection *biz.Collection) *pb.Co
 		at, _ := structpb.NewStruct(attr)
 		m.Attributes = append(m.Attributes, at)
 	}
+	if collection.Sig.PubKey != "" {
+		sig := &pb.DeploySig{
+			Pk:     collection.Sig.PubKey,
+			Fields: make([]string, 0),
+		}
+		for _, v := range collection.Sig.Fields {
+			sig.Fields = append(sig.Fields, string(v))
+		}
+	}
 	return m
 }

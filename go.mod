@@ -5,6 +5,8 @@ go 1.18
 require (
 	entgo.io/ent v0.12.3
 	github.com/PuerkitoBio/goquery v1.8.1
+	github.com/adshao/go-brc721 v0.3.0
+	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/go-kratos/kratos/contrib/log/logrus/v2 v2.0.0-20230530065457-69d73225a921
 	github.com/go-kratos/kratos/v2 v2.6.2
 	github.com/go-redis/redis/extra/redisotel v0.3.0
@@ -12,8 +14,9 @@ require (
 	github.com/google/wire v0.5.0
 	github.com/json-iterator/go v1.1.12
 	github.com/lib/pq v1.10.9
+	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/sirupsen/logrus v1.9.2
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.4
 	go.opentelemetry.io/otel v1.7.0
 	go.opentelemetry.io/otel/trace v1.7.0
 	go.uber.org/automaxprocs v1.5.1
@@ -29,6 +32,7 @@ require (
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/go-kratos/aegis v0.2.0 // indirect
@@ -39,7 +43,6 @@ require (
 	github.com/go-redis/redis/extra/rediscmd v0.2.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
-	github.com/google/subcommands v1.0.1 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.13.0 // indirect
@@ -55,7 +58,6 @@ require (
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
-	golang.org/x/tools v0.8.1-0.20230428195545-5283a0178901 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

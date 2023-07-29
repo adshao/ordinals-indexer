@@ -40,6 +40,9 @@ bin/
 config.yaml
 
 *.pb.go
-internal/data/ent/
+internal/data/ent/*
+internal/data/ent/*/
+!internal/data/ent/migrate/
 !internal/data/ent/schema/
-!internal/data/ent/migrate/migrations/
+internal/data/ent/migrate/*.go
+!internal/data/ent/migrate/*.sql

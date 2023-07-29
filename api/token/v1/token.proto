@@ -57,6 +57,15 @@ message TokenMessage {
   string address = 7;
   int64 inscription_id = 8;
   string inscription_uid = 9;
+  optional MintSig sig = 10;
+}
+
+message MintSig {
+  string s = 1;
+  string uid = 2;
+  uint64 expt = 3;
+  uint64 exph = 4;
+  string rec = 5;
 }
 
 message ListTokenRequest {
