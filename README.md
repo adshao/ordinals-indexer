@@ -29,25 +29,17 @@ make init
 
 Copy the `configs/config_example.yaml` to `configs/config.yaml` and modify the configuration file as needed.
 
-### Database
+### Migrate Database
 
-Use `atlas` to apply the database schema to your database.
-
-```bash
-cd internal/data
-atlas migrate apply --dir 'file://ent/migrate/migrations' --url 'postgres://test:test@localhost:5432/test'
-```
-
-### Database
-
-Use `atlas` to apply the database schema to your database.
+Use [atlas](https://atlasgo.io/) to apply the database schema to your database.
 
 ```bash
-cd internal/data
-atlas migrate apply --dir 'file://ent/migrate/migrations' --url 'postgres://test:test@127.0.0.1/test'
+atlas migrate apply --dir 'file://internal/data/ent/migrate/migrations' --url 'postgres://test:test@localhost:5432/test'
 ```
 
-### Generate code
+> Note: replace the database URL with your own. You should migrate the database every time there is a new migration.
+
+### Generate Code
 
 Generate code for APIs, configs and database:
 
@@ -55,7 +47,7 @@ Generate code for APIs, configs and database:
 make all
 ```
 
-### Build binary
+### Build Binary
 
 Build the binaries for the API server and syncer:
 
